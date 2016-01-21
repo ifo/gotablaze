@@ -45,6 +45,9 @@ func makeApiCallsForever(sleep time.Duration) {
 		// either there was a problem or no games to process
 		// TODO if response was EOF, retry sooner
 		if len(curr) == 0 || err != nil {
+			if err != nil {
+				log.Println(err)
+			}
 			time.Sleep(sleep*time.Second - time.Since(start))
 			continue
 		}
