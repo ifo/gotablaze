@@ -58,7 +58,7 @@ func createTable(name string, s *r.Session, tableOpts ...r.TableCreateOpts) erro
 	}
 
 	// TODO return the object in a useable format instead of just the error
-	_, err := r.Db(dbName).TableCreate(name, opts).Run(s)
+	err := r.Db(dbName).TableCreate(name, opts).Exec(s)
 	return err
 }
 
@@ -68,6 +68,6 @@ func gameTableQuery() r.Term {
 }
 
 func saveGame(game Game, s *r.Session) error {
-	_, err := gameTableQuery().Insert(game).Run(s)
+	err := gameTableQuery().Insert(game).Exec(s)
 	return err
 }
