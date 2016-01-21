@@ -38,7 +38,7 @@ func diffSide(last, current Side) (out Side) {
 		case reflect.Array, reflect.Slice:
 			// this should never happen, but it did, and it causes a panic
 			if lastVal.Field(i).Len() != currVal.Field(i).Len() {
-				log.Println("==== previousPlayers: %d | currentPlayers: %d ====",
+				log.Printf("==== previousPlayers: %d | currentPlayers: %d ====\n",
 					lastVal.Field(i).Len(), currVal.Field(i).Len())
 				continue
 			}
