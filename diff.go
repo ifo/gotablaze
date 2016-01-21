@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"reflect"
 )
 
@@ -36,10 +35,10 @@ func diffSide(last, current Side) (out Side) {
 	for i := 0; i < lastVal.NumField(); i++ {
 		switch lastVal.Field(i).Kind() {
 		case reflect.Array, reflect.Slice:
-			// this should never happen, but it did, and it causes a panic
+			// sometimes the api gives 0 players, then adds them into the game later
+			// in that case, just return all of the players
 			if lastVal.Field(i).Len() != currVal.Field(i).Len() {
-				log.Printf("==== previousPlayers: %d | currentPlayers: %d ====\n",
-					lastVal.Field(i).Len(), currVal.Field(i).Len())
+				diff.Elem().Field(i).Set(currVal.Field(i))
 				continue
 			}
 			for j := 0; j < lastVal.Field(i).Len(); j++ {
