@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"reflect"
 )
 
@@ -35,6 +36,12 @@ func diffSide(last, current Side) (out Side) {
 	for i := 0; i < lastVal.NumField(); i++ {
 		switch lastVal.Field(i).Kind() {
 		case reflect.Array, reflect.Slice:
+			// this should never happen, but it did, and it causes a panic
+			if lastVal.Field(i).Len() != currVal.Field(i).Len() {
+				log.Println("==== previousPlayers: %d | currentPlayers: %d ====",
+					lastVal.Field(i).Len(), currVal.Field(i).Len())
+				continue
+			}
 			for j := 0; j < lastVal.Field(i).Len(); j++ {
 				diff.Elem().Field(i).Set(
 					reflect.Append(diff.Elem().Field(i),
