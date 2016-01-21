@@ -17,7 +17,7 @@ func diffScoreboard(last, current Scoreboard) (out Scoreboard) {
 						currVal.Field(i).Interface().(Side))))
 			}
 		default:
-			if lastVal.Field(i).Interface() != currVal.Field(i).Interface() {
+			if lastVal.Field(i) != currVal.Field(i) {
 				diff.Elem().Field(i).Set(currVal.Field(i))
 			}
 		}
@@ -43,7 +43,7 @@ func diffSide(last, current Side) (out Side) {
 							currVal.Field(i).Index(j).Interface().(Player)))))
 			}
 		default:
-			if lastVal.Field(i).Interface() != currVal.Field(i).Interface() {
+			if lastVal.Field(i) != currVal.Field(i) {
 				diff.Elem().Field(i).Set(currVal.Field(i))
 			}
 		}
@@ -55,7 +55,7 @@ func diffPlayer(last, current Player) (out Player) {
 	diff := reflect.ValueOf(&out)
 	lastVal, currVal := reflect.ValueOf(last), reflect.ValueOf(current)
 	for i := 0; i < lastVal.NumField(); i++ {
-		if lastVal.Field(i).Interface() != currVal.Field(i).Interface() {
+		if lastVal.Field(i) != currVal.Field(i) {
 			diff.Elem().Field(i).Set(currVal.Field(i))
 		}
 	}
