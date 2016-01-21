@@ -13,14 +13,12 @@ var apikey = os.Getenv("APIKEY")
 
 func main() {
 	setupRethinkDB()
-	makeApiCallsForDuration(2, 16)
+	makeApiCallsForever(16)
 }
 
 // TODO setup real logging
-func makeApiCallsForDuration(numberOfCalls int, sleep time.Duration) {
-	if numberOfCalls < 1 {
-		numberOfCalls = 5
-	}
+func makeApiCallsForever(sleep time.Duration) {
+	log.Println("api calls forever started")
 	if sleep < 2 {
 		sleep = 16 // the magic Dota2 API number
 	}
@@ -41,14 +39,13 @@ func makeApiCallsForDuration(numberOfCalls int, sleep time.Duration) {
 		}
 	}
 
-	// loop: make api call
-	itr, start := make([]struct{}, numberOfCalls), time.Now()
-	for i := range itr {
+	for {
+		start := time.Now()
 		curr, err := makeApiCall()
 		// either there was a problem or no games to process
 		// TODO if response was EOF, retry sooner
 		if len(curr) == 0 || err != nil {
-			time.Sleep(sleep*time.Second*time.Duration(i+1) - time.Since(start))
+			time.Sleep(sleep*time.Second - time.Since(start))
 			continue
 		}
 
@@ -80,7 +77,7 @@ func makeApiCallsForDuration(numberOfCalls int, sleep time.Duration) {
 		prev = curr
 
 		// wait the remainder of 'sleep' seconds
-		time.Sleep(sleep*time.Second*time.Duration(i+1) - time.Since(start))
+		time.Sleep(sleep*time.Second - time.Since(start))
 	}
 }
 
