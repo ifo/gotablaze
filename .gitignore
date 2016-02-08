@@ -4,3 +4,6 @@ gotablaze
 # data directories
 clutter/
 data/
+
+# deploy
+deploy.sh
