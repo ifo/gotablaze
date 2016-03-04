@@ -44,7 +44,7 @@ type Game struct {
 	SeriesType   int        `json:"series_type" gorethink:"series_type,omitempty"`
 	Spectators   int        `json:"spectators" gorethink:"spectators,omitempty"`
 	StreamDelayS float64    `json:"stream_delay_s" gorethink:"stream_delay_s,omitempty"`
-	TimeStamp    time.Time  `json:"-" gorethink:"time_stamp"`
+	Timestamp    time.Time  `json:"-" gorethink:"timestamp"`
 }
 
 type Scoreboard struct {

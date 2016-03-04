@@ -69,7 +69,7 @@ func makeApiCallsForever(sleep time.Duration) {
 			if !areIdenticalScoreboard(oldGames[i].Scoreboard,
 				curGames[i].Scoreboard) {
 				game := Game{MatchID: oldGames[i].MatchID, Scoreboard: sb,
-					TimeStamp: curGames[i].TimeStamp}
+					Timestamp: curGames[i].Timestamp}
 				err := saveGame(game, session)
 				if err != nil {
 					log.Println("saveGame failed: ", err)
@@ -103,7 +103,7 @@ func makeApiCall() ([]Game, error) {
 
 	curTime := time.Now().UTC()
 	for i := range apiresponse.Result.Games {
-		apiresponse.Result.Games[i].TimeStamp = curTime
+		apiresponse.Result.Games[i].Timestamp = curTime
 	}
 
 	return apiresponse.Result.Games, nil
