@@ -13,6 +13,7 @@ var (
 	dbAddress            = "localhost:28015"
 	dbName               = "test"
 	gameTable            = "games"
+	indexes              = []string{"timestamp", "match_id"}
 )
 
 // TODO load configuration instead of hard coding constants
@@ -43,6 +44,8 @@ func setupRethinkDB() *r.Session {
 
 	// ensure named gameTable exists in database
 	createTable(gameTable, sess)
+	// with the correct indexes
+	createIndexes(gameTable, indexes, sess)
 
 	// TODO not use a global
 	session = sess
@@ -60,6 +63,17 @@ func createTable(name string, s *r.Session, tableOpts ...r.TableCreateOpts) erro
 	// TODO return the object in a useable format instead of just the error
 	err := r.Db(dbName).TableCreate(name, opts).Exec(s)
 	return err
+}
+
+func createIndexes(name string, indexes []string, s *r.Session) []error {
+	errs := []error{}
+	for _, index := range indexes {
+		err := r.Db(dbName).IndexCreate(index, r.IndexCreateOpts{}).Exec(s)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errs
 }
 
 // TODO rewrite this to not use a global
