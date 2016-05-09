@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/xml"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -85,7 +85,7 @@ func makeApiCallsForever(sleep time.Duration) {
 }
 
 func makeApiCall() ([]Game, error) {
-	resp, err := http.Get("https://api.steampowered.com/IDOTA2Match_570/GetLiveLeagueGames/v0001/?key=" + apikey)
+	resp, err := http.Get("https://api.steampowered.com/IDOTA2Match_570/GetLiveLeagueGames/v0001/?format=XML&key=" + apikey)
 	if err != nil {
 		return nil, err
 	}
@@ -96,17 +96,17 @@ func makeApiCall() ([]Game, error) {
 		return nil, err
 	}
 
-	var apiresponse Dota2ApiResponse
-	if err := json.Unmarshal(body, &apiresponse); err != nil {
+	var res Result
+	if err := xml.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 
 	curTime := time.Now().UTC()
-	for i := range apiresponse.Result.Games {
-		apiresponse.Result.Games[i].Timestamp = curTime
+	for i := range res.Games {
+		res.Games[i].Timestamp = curTime
 	}
 
-	return apiresponse.Result.Games, nil
+	return res.Games, nil
 }
 
 // TODO improve the O(n^2) algorithm (but n is small so take your time)
