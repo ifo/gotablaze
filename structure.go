@@ -54,20 +54,20 @@ type Scoreboard struct {
 }
 
 type Side struct {
-	BarracksState int         `xml:"barracks_state" gorethink:"barracks_state,omitempty"`
-	Players       []Player    `xml:"players>player" gorethink:"players,omitempty"`
-	Score         int         `xml:"score" gorethink:"score,omitempty"`
-	TowerState    int         `xml:"tower_state" gorethink:"tower_state,omitempty"`
-	Picks         []HeroID    `xml:"picks>pick" gorethink:"picks,omitempty"`
-	Bans          []HeroID    `xml:"bans>ban" gorethink:"bans,omitempty"`
-	Abilities     []Abilities `xml:"abilities>ability" gorethink:"abilities,omitempty"`
+	BarracksState int       `xml:"barracks_state" gorethink:"barracks_state,omitempty"`
+	Players       []Player  `xml:"players>player" gorethink:"players,omitempty"`
+	Score         int       `xml:"score" gorethink:"score,omitempty"`
+	TowerState    int       `xml:"tower_state" gorethink:"tower_state,omitempty"`
+	Picks         []HeroID  `xml:"picks>pick" gorethink:"picks,omitempty"`
+	Bans          []HeroID  `xml:"bans>ban" gorethink:"bans,omitempty"`
+	Abilities     []Ability `xml:"abilities>ability" gorethink:"abilities,omitempty"`
 }
 
 type HeroID struct {
 	HeroID int `xml:"hero_id" gorethink:"hero_id,omitempty"`
 }
 
-type Abilities struct {
+type Ability struct {
 	AbilityID    int `xml:"ability_id" gorethink:"ability_id,omitempty"`
 	AbilityLevel int `xml:"ability_level" gorethink:"ability_level,omitempty"`
 }
