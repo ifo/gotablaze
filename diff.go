@@ -1,97 +1,106 @@
 package main
 
 import (
-	"reflect"
+	r "reflect"
 )
 
-func diffScoreboard(last, current Scoreboard) (out Scoreboard) {
-	diff := reflect.ValueOf(&out)
-	lastVal, currVal := reflect.ValueOf(last), reflect.ValueOf(current)
-	for i := 0; i < lastVal.NumField(); i++ {
-		switch lastVal.Field(i).Kind() {
-		case reflect.Struct:
-			if lastVal.Field(i).Type() == reflect.TypeOf(Side{}) {
-				diff.Elem().Field(i).Set(
-					reflect.ValueOf(diffSide(
-						lastVal.Field(i).Interface().(Side),
-						currVal.Field(i).Interface().(Side))))
-			}
+func (s Scoreboard) diff(last Scoreboard) Scoreboard {
+	var out Scoreboard
+	d := r.ValueOf(&out).Elem()
+	c := r.ValueOf(s)
+	l := r.ValueOf(last)
+
+	for i := 0; i < c.NumField(); i++ {
+		switch c.Field(i).Kind() {
+		case r.Struct:
+			cs := c.Field(i).Interface().(Side)
+			ls := l.Field(i).Interface().(Side)
+			d.Field(i).Set(r.ValueOf(cs.diff(ls)))
 		default:
-			if lastVal.Field(i) != currVal.Field(i) {
-				diff.Elem().Field(i).Set(currVal.Field(i))
+			if c.Field(i) != l.Field(i) {
+				d.Field(i).Set(c.Field(i))
 			}
 		}
 	}
-	return
+
+	return out
 }
 
-func areIdenticalScoreboard(one, two Scoreboard) bool {
-	return reflect.DeepEqual(one, two)
+func (s Scoreboard) identical(other Scoreboard) bool {
+	return r.DeepEqual(s, other)
 }
 
-func diffSide(last, current Side) Side {
-	out := Side{}
-	diff := reflect.ValueOf(&out)
-	lastVal, currVal := reflect.ValueOf(last), reflect.ValueOf(current)
-	for i := 0; i < lastVal.NumField(); i++ {
-		switch lastVal.Field(i).Kind() {
-		case reflect.Array, reflect.Slice:
+func (s Side) diff(last Side) Side {
+	var out Side
+	d := r.ValueOf(&out).Elem()
+	c := r.ValueOf(s)
+	l := r.ValueOf(last)
+
+	for i := 0; i < c.NumField(); i++ {
+		df := d.Field(i)
+		cf := c.Field(i)
+		lf := l.Field(i)
+
+		switch cf.Kind() {
+		case r.Array, r.Slice:
 			// sometimes the api gives 0 players, then adds them into the game later
 			// in that case, just return all of the players
-			if lastVal.Field(i).Len() == 0 || lastVal.Field(i).Len() != currVal.Field(i).Len() {
-				diff.Elem().Field(i).Set(currVal.Field(i))
+			if cf.Len() == 0 || cf.Len() != lf.Len() {
+				df.Set(cf)
 				continue
 			}
-			switch lastVal.Field(i).Index(0).Interface().(type) {
+			switch cf.Index(0).Interface().(type) {
 			case HeroID:
 				// when length is 5, all heroes have been picked or banned
-				if lastVal.Field(i).Len() != 5 {
-					diff.Elem().Field(i).Set(currVal.Field(i))
+				if cf.Len() != 5 {
+					df.Set(cf)
 				}
 			case Player:
-				for j := 0; j < lastVal.Field(i).Len(); j++ {
-					diff.Elem().Field(i).Set(
-						reflect.Append(diff.Elem().Field(i),
-							reflect.ValueOf(diffPlayer(
-								lastVal.Field(i).Index(j).Interface().(Player),
-								currVal.Field(i).Index(j).Interface().(Player)))))
+				for j := 0; j < cf.Len(); j++ {
+					cpl := cf.Index(j).Interface().(Player)
+					lpl := lf.Index(j).Interface().(Player)
+					df.Set(r.Append(df, r.ValueOf(cpl.diff(lpl))))
 				}
 			case Ability:
-				for j := 0; j < lastVal.Field(i).Len(); j++ {
-					diff.Elem().Field(i).Set(
-						reflect.Append(diff.Elem().Field(i),
-							reflect.ValueOf(diffAbility(
-								lastVal.Field(i).Index(j).Interface().(Ability),
-								currVal.Field(i).Index(j).Interface().(Ability)))))
+				for j := 0; j < cf.Len(); j++ {
+					cab := cf.Index(j).Interface().(Ability)
+					lab := lf.Index(j).Interface().(Ability)
+					df.Set(r.Append(df, r.ValueOf(cab.diff(lab))))
 				}
 			}
 		default:
-			if lastVal.Field(i) != currVal.Field(i) {
-				diff.Elem().Field(i).Set(currVal.Field(i))
+			if cf != lf {
+				df.Set(cf)
 			}
 		}
 	}
 	return out
 }
 
-func diffPlayer(last, current Player) (out Player) {
-	diff := reflect.ValueOf(&out)
-	lastVal, currVal := reflect.ValueOf(last), reflect.ValueOf(current)
-	for i := 0; i < lastVal.NumField(); i++ {
-		if lastVal.Field(i) != currVal.Field(i) {
-			diff.Elem().Field(i).Set(currVal.Field(i))
+func (p Player) diff(last Player) Player {
+	var out Player
+	d := r.ValueOf(&out).Elem()
+	c := r.ValueOf(p)
+	l := r.ValueOf(last)
+
+	for i := 0; i < c.NumField(); i++ {
+		if c.Field(i) != l.Field(i) {
+			d.Field(i).Set(c.Field(i))
 		}
 	}
-	return
+	return out
 }
 
-func diffAbility(last, current Ability) (out Ability) {
-	diff := reflect.ValueOf(&out)
-	lastVal, currVal := reflect.ValueOf(last), reflect.ValueOf(current)
-	for i := 0; i < lastVal.NumField(); i++ {
-		if lastVal.Field(i) != currVal.Field(i) {
-			diff.Elem().Field(i).Set(currVal.Field(i))
+func (a Ability) diff(last Ability) Ability {
+	var out Ability
+	d := r.ValueOf(&out).Elem()
+	c := r.ValueOf(a)
+	l := r.ValueOf(last)
+
+	for i := 0; i < c.NumField(); i++ {
+		if c.Field(i) != l.Field(i) {
+			d.Field(i).Set(c.Field(i))
 		}
 	}
-	return
+	return out
 }

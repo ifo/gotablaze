@@ -65,11 +65,14 @@ func makeApiCallsForever(sleep time.Duration) {
 
 		// diff and save games (loop)
 		for i := range oldGames {
-			sb := diffScoreboard(oldGames[i].Scoreboard, curGames[i].Scoreboard)
-			if !areIdenticalScoreboard(oldGames[i].Scoreboard,
-				curGames[i].Scoreboard) {
-				game := Game{MatchID: oldGames[i].MatchID, Scoreboard: sb,
-					Timestamp: curGames[i].Timestamp}
+			s := curGames[i].Scoreboard
+			if !s.identical(oldGames[i].Scoreboard) {
+				sb := curGames[i].Scoreboard.diff(oldGames[i].Scoreboard)
+				game := Game{
+					MatchID:    oldGames[i].MatchID,
+					Scoreboard: sb,
+					Timestamp:  curGames[i].Timestamp,
+				}
 				err := saveGame(game, session)
 				if err != nil {
 					log.Println("saveGame failed: ", err)
