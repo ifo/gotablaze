@@ -7,15 +7,6 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-// TODO pass these as context instead of using a global
-var (
-	session   *r.Session = nil
-	dbAddress            = "localhost:28015"
-	dbName               = "test"
-	gameTable            = "games"
-	indexes              = []string{"timestamp", "match_id"}
-)
-
 // TODO load configuration instead of hard coding constants
 const (
 	dbAddressEnv = "DBADDRESS"
@@ -23,36 +14,59 @@ const (
 	gameTableEnv = "GAMETABLE"
 )
 
-func setupRethinkDB() *r.Session {
-	if os.Getenv(dbAddressEnv) != "" {
-		dbAddress = os.Getenv(dbAddressEnv)
+type DBConfig struct {
+	Address   string
+	Name      string
+	GameTable string
+	Indexes   []string
+}
+
+type DBSession struct {
+	S      *r.Session
+	Config DBConfig
+}
+
+func defaultDBConfig() DBConfig {
+	return DBConfig{
+		Address:   "localhost:28015",
+		Name:      "test",
+		GameTable: "games",
+		Indexes:   []string{"timestamp", "match_id"},
 	}
-	if os.Getenv(dbNameEnv) != "" {
-		dbName = os.Getenv(dbNameEnv)
+}
+
+func (c *DBConfig) Setup() *DBSession {
+	if addr := os.Getenv(dbAddressEnv); addr != "" {
+		c.Address = addr
 	}
-	if os.Getenv(gameTableEnv) != "" {
-		gameTable = os.Getenv(gameTableEnv)
+	if name := os.Getenv(dbNameEnv); name != "" {
+		c.Name = name
+	}
+	if table := os.Getenv(gameTableEnv); table != "" {
+		c.GameTable = table
 	}
 
 	sess, err := r.Connect(r.ConnectOpts{
-		Address:  dbAddress,
-		Database: dbName,
+		Address:  c.Address,
+		Database: c.Name,
 	})
 	if err != nil {
 		log.Fatalf("RethinkDB Connection error: %s\n", err.Error())
 	}
 
-	// ensure named gameTable exists in database
-	createTable(gameTable, sess)
-	// with the correct indexes
-	createIndexes(gameTable, indexes, sess)
+	// set session in DBConfig
+	dbs := &DBSession{S: sess, Config: *c}
 
-	// TODO not use a global
-	session = sess
-	return session
+	// ensure named gameTable exists in database ...
+	dbs.CreateTable(c.GameTable)
+
+	// ... with the correct indexes
+	dbs.CreateIndexes(c.GameTable, c.Indexes)
+
+	return dbs
 }
 
-func createTable(name string, s *r.Session, tableOpts ...r.TableCreateOpts) error {
+func (s *DBSession) CreateTable(name string, tableOpts ...r.TableCreateOpts) error {
 	opts := r.TableCreateOpts{}
 	if len(tableOpts) > 1 {
 		log.Fatalln("createTable only takes 0 or 1 arguments")
@@ -60,15 +74,13 @@ func createTable(name string, s *r.Session, tableOpts ...r.TableCreateOpts) erro
 		opts = tableOpts[0]
 	}
 
-	// TODO return the object in a useable format instead of just the error
-	err := r.Db(dbName).TableCreate(name, opts).Exec(s)
-	return err
+	return r.Db(s.Config.Name).TableCreate(name, opts).Exec(s.S)
 }
 
-func createIndexes(name string, indexes []string, s *r.Session) []error {
+func (s *DBSession) CreateIndexes(name string, indexes []string) []error {
 	errs := []error{}
 	for _, index := range indexes {
-		err := r.Db(dbName).IndexCreate(index, r.IndexCreateOpts{}).Exec(s)
+		err := r.Table(s.Config.GameTable).IndexCreate(index, r.IndexCreateOpts{}).Exec(s.S)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -76,12 +88,6 @@ func createIndexes(name string, indexes []string, s *r.Session) []error {
 	return errs
 }
 
-// TODO rewrite this to not use a global
-func gameTableQuery() r.Term {
-	return r.Table(gameTable)
-}
-
-func saveGame(game Game, s *r.Session) error {
-	err := gameTableQuery().Insert(game).Exec(s)
-	return err
+func (s *DBSession) SaveGame(game Game) error {
+	return r.Table(s.Config.GameTable).Insert(game).Exec(s.S)
 }

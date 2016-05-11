@@ -12,12 +12,13 @@ import (
 var apikey = os.Getenv("APIKEY")
 
 func main() {
-	setupRethinkDB()
-	makeApiCallsForever(16)
+	cfg := defaultDBConfig()
+	s := cfg.Setup()
+	s.MakeApiCallsForever(16)
 }
 
 // TODO setup real logging
-func makeApiCallsForever(sleep time.Duration) {
+func (s *DBSession) MakeApiCallsForever(sleep time.Duration) {
 	log.Println("api calls forever started")
 	if sleep < 2 {
 		sleep = 16 // the magic Dota2 API number
@@ -33,7 +34,7 @@ func makeApiCallsForever(sleep time.Duration) {
 	}
 
 	for _, game := range prev {
-		err := saveGame(game, session)
+		err := s.SaveGame(game)
 		if err != nil {
 			log.Fatalln("saveGame failed: ", err)
 		}
@@ -57,7 +58,7 @@ func makeApiCallsForever(sleep time.Duration) {
 
 		// create new games
 		for _, game := range newGames {
-			err := saveGame(game, session)
+			err := s.SaveGame(game)
 			if err != nil {
 				log.Println("saveGame failed: ", err)
 			}
@@ -65,15 +66,15 @@ func makeApiCallsForever(sleep time.Duration) {
 
 		// diff and save games (loop)
 		for i := range oldGames {
-			s := curGames[i].Scoreboard
-			if !s.identical(oldGames[i].Scoreboard) {
-				sb := curGames[i].Scoreboard.diff(oldGames[i].Scoreboard)
+			sb := curGames[i].Scoreboard
+			if !sb.identical(oldGames[i].Scoreboard) {
+				sbd := curGames[i].Scoreboard.diff(oldGames[i].Scoreboard)
 				game := Game{
 					MatchID:    oldGames[i].MatchID,
-					Scoreboard: sb,
+					Scoreboard: sbd,
 					Timestamp:  curGames[i].Timestamp,
 				}
-				err := saveGame(game, session)
+				err := s.SaveGame(game)
 				if err != nil {
 					log.Println("saveGame failed: ", err)
 				}
